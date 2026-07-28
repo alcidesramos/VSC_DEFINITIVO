@@ -20,17 +20,21 @@ SNIPPETS = {
 #sino funciona ejecutar comando  CMake: Delete Cache and Reconfigure
 
 #opciones para librerias
-# BUSCAR LA CARPETA "librerias" EN CORE O EN CORE/SRC (Insensible a mayúsculas)
+# BUSCAR LA CARPETA "librerias" EN CORE, CORE/SRC O EN LA RAÍZ DEL PROYECTO (Insensible a mayúsculas)
+# La búsqueda en la raíz cubre el caso en que CubeMX no genera la
+# estructura Core/Src (por ejemplo, al elegir el toolchain "CMake"),
+# dejando los archivos generados directamente en la carpeta del proyecto.
 
 set(RUTAS_DE_BUSQUEDA 
     "${CMAKE_SOURCE_DIR}/Core"
     "${CMAKE_SOURCE_DIR}/Core/Src"
+    "${CMAKE_SOURCE_DIR}"
 )
 
 set(LIBRERIAS_DIR "")
 
 #opciones para  carpeta de librerias
-# Recorr0 cada ruta posible (Core y luego Core/Src)
+# Recorremos cada ruta posible (Core, Core/Src y finalmente la raíz del proyecto)
 foreach(ruta ${RUTAS_DE_BUSQUEDA})
     # Solo buscamos si la ruta base existe y aún no hemos encontrado la carpeta
     if(EXISTS "${ruta}" AND NOT LIBRERIAS_DIR)
@@ -55,7 +59,7 @@ endforeach()
 if(LIBRERIAS_DIR)
     message(STATUS "Carpeta de librerías encontrada en: ${LIBRERIAS_DIR}")
 else()
-    message(WARNING "No se encontró la carpeta 'librerias' ni en Core/ ni en Core/Src/")
+    message(WARNING "No se encontró la carpeta 'librerias' ni en Core/, Core/Src/ ni en la raíz del proyecto")
     # Fallback por defecto para evitar errores catastróficos en CMake
     set(LIBRERIAS_DIR "${CMAKE_SOURCE_DIR}/Core/librerias") 
 endif()
@@ -454,9 +458,6 @@ class CMakeGeneratorApp:
                 with open(self.cmake_file_path, "a", encoding="utf-8") as archivo:
                     for encabezado, snippet in bloques_a_escribir:
                         archivo.write(f"\n\n{encabezado}\n{snippet}")
-
-            nombres_agregados = [enc.split(" (")[0].replace(MARCADORES.get("opt", ""), "Optimización de Release")
-                                  if False else None for enc in []]  # (no-op, se arma abajo)
 
             nombres_agregados = []
             for encabezado, _ in bloques_a_escribir:
